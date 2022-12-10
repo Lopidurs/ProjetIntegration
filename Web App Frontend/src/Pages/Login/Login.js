@@ -1,8 +1,12 @@
 /*Importing Components */
 import {Row, Col, Form, Button, Container} from 'react-bootstrap';
-import { sha256 } from 'js-sha256';
+import {sha256} from 'js-sha256';
 import {useNavigate} from 'react-router';
 import CustomNavbar from '../../Components/CustomNavbar/CustomNavbar';
+import ReCAPTCHA from "react-google-recaptcha";
+import React, {useRef,useEffect, useState} from 'react';
+
+
 /*Importing Styles*/
 import './Login.css';
 
@@ -12,16 +16,28 @@ import config from "../../config.json";
 
 function Login() {
     let navigate = useNavigate();
+    const recaptchaRef = React.createRef();
+
+    function onChange(value){
+        fetch("https://www.google.com/recaptcha/api/siteverify?secret=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe&response="+value, {
+            method: 'POST',
+            headers: {'Content-type': 'application/json'},
+            }).then((response) => console.log(response.json()))
+    }
 
     function sendLogin(event) {
+        const recaptchaValue = recaptchaRef.current.getValue();
+        recaptchaRef.current.reset();
+
+        event.preventDefault()
 
         const user = {
             Email: event.target[0].value,
-            Password: sha256(event.target[1].value+"J'aime bien Tommy")
+            Password: sha256(event.target[1].value + "J'aime bien Tommy")
         };
-        event.preventDefault()
 
-        fetch(config.API_URL+"/users/login", {
+
+        fetch(config.API_URL + "/users/login", {
             method: 'POST',
             headers: {'Content-type': 'application/json'},
             body: (
@@ -63,6 +79,12 @@ function Login() {
                             <Form.Label className='custom-form-label' htmlFor="password">Mot de passe</Form.Label>
                             <Form.Control id="password" className='form-login' placeholder="e5#3ft4%6" type='password'
                                           required/>
+                        </Col>
+                    </Row>
+                    <Row className="justify-content-md-center mb-4">
+                        <Col>
+                            <ReCAPTCHA sitekey={"6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"} ref={recaptchaRef}
+                                       onChange={onChange}/>
                         </Col>
                     </Row>
                     <Row className="justify-content-md-center">
